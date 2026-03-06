@@ -11,21 +11,24 @@ app.use(express.json());
 
 // Sample product data
 let products = [
-    { id: 1, productName: 'Milk Tea', category: 'Beverage' },
-    { id: 2, productName: 'Cheese Cake', category: 'Dessert' },
+    { id: 1, productName: 'Milk Tea', category: 'Beverage', price: 4.5 },
+    { id: 2, productName: 'Cheese Cake', category: 'Dessert', price: 6.0 },
 ];
+
+// Utility to format a product's price in dollars
+const formatProduct = (p) => ({ ...p, price: `$${p.price}` });
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
 // Get all products
-app.get('/products', (req, res) => res.json(products));
+app.get('/products', (req, res) => res.json(products.map(formatProduct)));
 
 // Get product by ID
 app.get('/products/:id', (req, res) => {
     const product = products.find(p => p.id === parseInt(req.params.id));
     if (product) {
-        res.json(product);
+        res.json(formatProduct(product));
     } else {
         res.status(404).json({ message: 'Product not found' });
     }
@@ -33,16 +36,17 @@ app.get('/products/:id', (req, res) => {
 
 // Create new product
 app.post('/products', (req, res) => {
-    const { productName, category } = req.body;
+    const { productName, category, price } = req.body;
 
-    if (!productName || !category) {
-        return res.status(400).json({ message: 'Product name and category are required' });
+    if (!productName || !category || price === undefined) {
+        return res.status(400).json({ message: 'Product name, category, and price are required' });
     }
 
     const newProduct = {
         id: products.length ? products[products.length - 1].id + 1 : 1,
         productName,
-        category
+        category,
+        price
     };
 
     products.push(newProduct);
@@ -55,13 +59,13 @@ app.put('/products/:id', (req, res) => {
     const productIndex = products.findIndex(p => p.id === productId);
 
     if (productIndex !== -1) {
-        const { productName, category } = req.body;
+        const { productName, category, price } = req.body;
 
-        if (!productName || !category) {
-            return res.status(400).json({ message: 'Product name and category are required' });
+        if (!productName || !category || price === undefined) {
+            return res.status(400).json({ message: 'Product name, category, and price are required' });
         }
 
-        products[productIndex] = { id: productId, productName, category };
+        products[productIndex] = { id: productId, productName, category, price };
         res.json(products[productIndex]);
     } else {
         res.status(404).json({ message: 'Product not found' });
